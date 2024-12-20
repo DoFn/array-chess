@@ -250,8 +250,11 @@ void game_loop (struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
             print_board(board);
             turn = turn_flip(turn);
             if (check_check(board) != NONE) {
-                printf("Check\n");
+                printf("Check");
                 tracker = any_move(board, turn);
+                if (tracker == NONE) {
+                    printf("!\n");
+                }
             } 
             if (tracker != NONE) {
                 status = TERMINATED;
@@ -331,7 +334,7 @@ int valid_move (struct movement_indexes movements, struct board board[BOARD_LENG
         struct board prototype[BOARD_LENGTH][BOARD_HEIGHT];
         copyboard(board, prototype);
         piece_place(movements, prototype);
-        if (check_check(prototype) != turn_flip(turn) && check_check(prototype) != NONE) {
+        if (check_check(prototype) == turn) {
             status = INVALID_MOVE;
         }
     }
@@ -459,7 +462,7 @@ int valid_move_rook (struct movement_indexes movements, struct board board[BOARD
 // This function checks whether the requested move is valid for a bishop
 int valid_move_bishop (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
     // Make sure bishop is moving diagonally, else return INVALID_MOVE 
-    if (fabs(movements.col_1) - fabs(movements.col_2) != fabs(movements.row_1) - fabs(movements.row_2) || 
+    if (fabs(fabs(movements.col_1) - fabs(movements.col_2)) != fabs(fabs(movements.row_1) - fabs(movements.row_2)) || 
     movements.col_1 == movements.col_2) {
         return INVALID_MOVE;
     }
@@ -621,6 +624,7 @@ int check_check (struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
     int col_index = 0;
     int row_index = 0;
 
+
     // Determine if white king in check
     while (board[col_index][row_index].piece != KING || board[col_index][row_index].colour != WHITE) {
         col_index++;
@@ -636,6 +640,7 @@ int check_check (struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
         return_value = WHITE;
     }
     status = INVALID;
+
 
     col_index = 0;
     row_index = 0;
