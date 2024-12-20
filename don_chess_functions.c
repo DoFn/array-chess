@@ -661,25 +661,24 @@ int check_check (struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
 // This function checks whether a piece is in range of attacking another piece
 int in_range (struct board board[BOARD_LENGTH][BOARD_HEIGHT], int row, int col) {
     int search = turn_flip(board[row][col].colour);
-    int status = INVALID;
     struct movement_indexes movements;
-    movements.row_1 = 0;
-    movements.col_1 = 0;
+    movements.row_1;
+    movements.col_1;
     movements.row_2 = row;
     movements.col_2 = col;
     int move;
-    while (movements.row_1 < BOARD_LENGTH) {
-        move = possible_move(movements, board, search);
-        if (move == VALID_MOVE) {
-            status = VALID;
-        }
-        movements.col_1++;
-        if (movements.col_1 == BOARD_LENGTH) {
-            movements.col_1 = 0;
-            movements.row_1++;
+    for (int i = 0; i < BOARD_LENGTH; i++) {
+        for (int j = 0; j < BOARD_LENGTH; j++) {
+            movements.row_1 = i;
+            movements.col_1 = j;
+            if (possible_move(movements, board, BLACK) != INVALID_MOVE || possible_move(movements, board, WHITE)) {
+                if (board[movements.col_1][movements.row_1].colour != board[movements.col_2][movements.row_2].colour) {
+                    return VALID;
+                }
+            }
         }
     }
-    return status;
+    return INVALID;
 }
 
 // This function will copy one board onto another
