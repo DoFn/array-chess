@@ -3,7 +3,7 @@
 //
 // This program allows the user to play a game of Chess
 //
-// This program is being written by Donald Danilo from 20.12.2024 to 21.12.2024
+// This program was written by Donald Danilo from 20.12.2024 to 21.12.2024
 //
 // Description
 // This program allows the user to play a simple game of chess with another person via
