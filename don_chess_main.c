@@ -11,9 +11,6 @@
 // utilises three files (don_chess_main.c, don_chess_functions.c and don_chess_header.h).
 
 // Header File
-#include <stdio.h>
-#include <math.h>
-#include <stdbool.h>
 #include "don_chess_header.h"
 
 // Main function
