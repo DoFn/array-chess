@@ -550,6 +550,8 @@ int valid_move_queen (struct movement_indexes movements, struct board board[BOAR
 
 // This function checks whether the requested move is valid for a king
 int valid_move_king (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
+    int status = INVALID;
+    bool left = true;
     if (valid_move_queen(movements, board) == VALID_MOVE) {
         if (fabs(movements.row_1 - movements.row_2) <= 1 && fabs(movements.col_1 - movements.col_2) <= 1) {
             return VALID_MOVE;
@@ -558,23 +560,31 @@ int valid_move_king (struct movement_indexes movements, struct board board[BOARD
             if (check_check(board) == board[movements.col_1][movements.row_1].colour) {
                 return INVALID_MOVE;
             }
-            bool left = true;
             if (movements.col_2 > movements.col_1) {
                 left = false;
             }
             if (board[movements.col_1][movements.row_1].movement == STATIC && left == true &&
              board[0][movements.row_1].movement == STATIC) {
-                return SPECIAL_VALID_MOVE;
+                status = SPECIAL_VALID_MOVE;
             } else if (board[movements.col_1][movements.row_1].movement == STATIC && left == false &&
              board[7][movements.row_1].movement == STATIC) {
-                return SPECIAL_VALID_MOVE;
+                status = SPECIAL_VALID_MOVE;
             }
         } else {
             return INVALID_MOVE;
         }
     }
+    if (status == SPECIAL_VALID_MOVE) {
+        if (left == true) {
+            movements.col_2++;
+        } else {
+            movements.col_2--;
+        }
+        if (valid_move(movements, board, board[movements.col_1][movements.row_1].colour) != VALID_MOVE) {
+            status = INVALID_MOVE;
+        }
+    }
 
-    int status = INVALID;
     return status;
 }
 
