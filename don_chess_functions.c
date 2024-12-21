@@ -257,14 +257,14 @@ void game_loop (struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
             promotion(movement, board, status_pointer);
             print_board(board);
             turn = turn_flip(turn);
+            tracker = any_move(board, turn);
             if (check_check(board) != NONE) {
                 printf("Check");
-                tracker = any_move(board, turn);
                 if (tracker == NONE) {
                     printf("!\n");
                 }
             } 
-            if (tracker != NONE) {
+            if (tracker == turn) {
                 status = TERMINATED;
             } else {
                 print_turn(turn);
@@ -278,6 +278,8 @@ void game_loop (struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
     // Handle end of game messages
     if (status == TERMINATED && tracker == NONE) {
         printf("INPUT TERMINATED: ENDING GAME\n");
+    } else if (tracker != NONE && check_check(board) == NONE) {
+        printf("Stalemate\n");
     } else if (tracker == WHITE) {
         printf("mate, Black Wins\n");
     } else if (tracker == BLACK) {
