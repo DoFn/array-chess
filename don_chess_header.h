@@ -39,7 +39,8 @@ enum colour {
 
 enum movement_status {
     STATIC,
-    MOBILE
+    MOBILE,
+    FULLY_MOBILE
 };
 
 enum game_status {
@@ -103,12 +104,16 @@ struct movement_indexes scan_move (enum game_status *status_pointer, int turn);
 int valid_move (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT], int turn);
 int possible_move (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT], int turn);
 int valid_move_pawn (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
+int valid_en_passant (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
 int valid_move_rook (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
 int valid_move_bishop (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
 int valid_move_queen (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
 int valid_move_king (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
 int valid_move_knight (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
 void piece_place (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
+void special_move (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
+void castle (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
+void en_passant (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
 int turn_flip(int turn);
 void print_turn (int turn);
 void promotion (struct movement_indexes movement, struct board board[BOARD_LENGTH][BOARD_HEIGHT], enum game_status *game_status);
@@ -117,4 +122,4 @@ int in_range (struct board board[BOARD_LENGTH][BOARD_HEIGHT], int row, int col);
 void copyboard (struct board board_copy[BOARD_LENGTH][BOARD_HEIGHT], 
 struct board board_paste[BOARD_LENGTH][BOARD_HEIGHT]);
 int any_move (struct board board[BOARD_LENGTH][BOARD_HEIGHT], int colour);
-
+void mobile_setter(struct board board[BOARD_LENGTH][BOARD_HEIGHT]);
