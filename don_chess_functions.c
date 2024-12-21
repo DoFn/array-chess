@@ -244,8 +244,16 @@ void game_loop (struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
     while (status == ONGOING) {
         movement = scan_move(status_pointer, turn);
         move_status = valid_move(movement, board, turn);
+        if (move_status != INVALID_MOVE) {
+            mobile_setter(board);
+        }
         if (move_status == VALID_MOVE) {
             piece_place(movement, board);
+            
+        } else if (move_status == SPECIAL_VALID_MOVE){
+            special_move(movement, board);
+        }
+        if (move_status != INVALID_MOVE) {
             promotion(movement, board, status_pointer);
             print_board(board);
             turn = turn_flip(turn);
@@ -330,10 +338,17 @@ int valid_move (struct movement_indexes movements, struct board board[BOARD_LENG
 
     // If move is legal, create a copy of the board, execute move, and look for checks, then execute
     // move if all checks are allowed during this turn i.e. not moving into check
-    if (status != INVALID_MOVE) {
+    if (status == VALID_MOVE) {
         struct board prototype[BOARD_LENGTH][BOARD_HEIGHT];
         copyboard(board, prototype);
         piece_place(movements, prototype);
+        if (check_check(prototype) == turn) {
+            status = INVALID_MOVE;
+        }
+    } else if (status == SPECIAL_VALID_MOVE) {
+        struct board prototype[BOARD_LENGTH][BOARD_HEIGHT];
+        copyboard(board, prototype);
+        special_move(movements, prototype);
         if (check_check(prototype) == turn) {
             status = INVALID_MOVE;
         }
@@ -415,8 +430,26 @@ int valid_move_pawn (struct movement_indexes movements, struct board board[BOARD
     if (status == VALID_MOVE && board[movements.col_2][movements.row_2].piece == EMPTY) {
         status = INVALID;
     }
-
+    if (status != VALID_MOVE) {
+        status = valid_en_passant(movements, board);
+    }
     return status;
+}
+
+// This function checks whether en passant is valid
+int valid_en_passant (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
+    if (board[movements.col_2][movements.row_1].piece == PAWN && board[movements.col_2][movements.row_1].movement == MOBILE
+    && fabs(movements.row_1 - movements.row_2) == 1 && fabs(movements.col_1 - movements.col_2) == 1) {
+        if (board[movements.col_1][movements.row_1].colour == WHITE && movements.row_1 == 4) {
+            return SPECIAL_VALID_MOVE;
+        } else if (board[movements.col_1][movements.row_1].colour == BLACK && movements.row_1 == 3) {
+            return SPECIAL_VALID_MOVE;
+        } else {
+            return INVALID_MOVE;
+        }
+    } else {
+        return INVALID_MOVE;
+    }
 }
 
 // This function checks whether the requested move is valid for a rook
@@ -520,6 +553,22 @@ int valid_move_king (struct movement_indexes movements, struct board board[BOARD
     if (valid_move_queen(movements, board) == VALID_MOVE) {
         if (fabs(movements.row_1 - movements.row_2) <= 1 && fabs(movements.col_1 - movements.col_2) <= 1) {
             return VALID_MOVE;
+        // Check if castling permitted
+        } else if (fabs(movements.row_1 - movements.row_2) == 0 && fabs(movements.col_1 - movements.col_2) == 2) {
+            if (check_check(board) == board[movements.col_1][movements.row_1].colour) {
+                return INVALID_MOVE;
+            }
+            bool left = true;
+            if (movements.col_2 > movements.col_1) {
+                left = false;
+            }
+            if (board[movements.col_1][movements.row_1].movement == STATIC && left == true &&
+             board[0][movements.row_1].movement == STATIC) {
+                return SPECIAL_VALID_MOVE;
+            } else if (board[movements.col_1][movements.row_1].movement == STATIC && left == false &&
+             board[7][movements.row_1].movement == STATIC) {
+                return SPECIAL_VALID_MOVE;
+            }
         } else {
             return INVALID_MOVE;
         }
@@ -545,12 +594,48 @@ int valid_move_knight (struct movement_indexes movements, struct board board[BOA
 void piece_place (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
     board[movements.col_2][movements.row_2].piece = board[movements.col_1][movements.row_1].piece;
     board[movements.col_1][movements.row_1].piece = EMPTY;
-    board[movements.col_2][movements.row_2].movement = MOBILE;
+    board[movements.col_2][movements.row_2].movement = board[movements.col_1][movements.row_1].movement;
     board[movements.col_1][movements.row_1].movement = STATIC;
+    if (board[movements.col_2][movements.row_2].movement == STATIC) {
+        board[movements.col_2][movements.row_2].movement = MOBILE;
+    }
     board[movements.col_2][movements.row_2].colour = board[movements.col_1][movements.row_1].colour;
     board[movements.col_1][movements.row_1].colour = NONE;
 }
 
+// This function will execute any special moves
+void special_move (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
+    if (board[movements.col_1][movements.row_1].piece == KING) {
+        castle(movements, board);
+    } else {
+        en_passant(movements,board);
+    }
+}
+
+// This function will execute castling
+void castle (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
+    if (movements.col_2 > movements.col_1) {
+        piece_place(movements, board);
+        movements.col_1 = 7;
+        movements.col_2 = movements.col_2 - 1;
+        piece_place(movements, board);
+    } else {
+        piece_place(movements, board);
+        movements.col_1 = 0;
+        movements.col_2 = movements.col_2 + 1;
+        piece_place(movements, board);
+    }
+}
+// This function will execute En Passant
+void en_passant (struct movement_indexes movements, struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
+    int tmp = movements.row_2;
+    movements.row_2 = movements.row_1;
+    piece_place(movements, board);
+    movements.col_1 = movements.col_2;
+    movements.row_1 = movements.row_2;
+    movements.row_2 = tmp;
+    piece_place(movements, board);
+}
 // This function will switch the current turn when a move is executed
 int turn_flip (int turn) {
     if (turn == WHITE) {
@@ -676,7 +761,7 @@ int in_range (struct board board[BOARD_LENGTH][BOARD_HEIGHT], int row, int col) 
         for (int j = 0; j < BOARD_LENGTH; j++) {
             movements.row_1 = i;
             movements.col_1 = j;
-            if (possible_move(movements, board, BLACK) != INVALID_MOVE || possible_move(movements, board, WHITE)) {
+            if (possible_move(movements, board, BLACK) != INVALID_MOVE || possible_move(movements, board, WHITE) != INVALID_MOVE) {
                 if (board[movements.col_1][movements.row_1].colour != board[movements.col_2][movements.row_2].colour) {
                     return VALID;
                 }
@@ -732,4 +817,15 @@ int any_move (struct board board[BOARD_LENGTH][BOARD_HEIGHT], int colour) {
         }
     }
     return status;
+}
+
+// This function switches piece fields to FULLY_MOBILE if they have been mobile for a turn
+void mobile_setter(struct board board[BOARD_LENGTH][BOARD_HEIGHT]) {
+    for (int i = 0; i < BOARD_LENGTH; i++) {
+        for (int j = 0; j < BOARD_LENGTH; j++) {
+            if (board[i][j].movement == MOBILE) {
+                board[i][j].movement = FULLY_MOBILE;
+            }
+        }
+    }
 }
