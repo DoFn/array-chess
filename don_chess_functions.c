@@ -576,6 +576,11 @@ int valid_move_king (struct movement_indexes movements, struct board board[BOARD
             return INVALID_MOVE;
         }
     }
+    movements.col_2--;
+    if (left == true && board[movements.col_2][movements.row_2].piece != EMPTY) {
+        return INVALID_MOVE;
+    }
+    movements.col_2++;
     if (status == SPECIAL_VALID_MOVE) {
         if (left == true) {
             movements.col_2++;
@@ -607,7 +612,7 @@ void piece_place (struct movement_indexes movements, struct board board[BOARD_LE
     board[movements.col_2][movements.row_2].piece = board[movements.col_1][movements.row_1].piece;
     board[movements.col_1][movements.row_1].piece = EMPTY;
     board[movements.col_2][movements.row_2].movement = board[movements.col_1][movements.row_1].movement;
-    board[movements.col_1][movements.row_1].movement = STATIC;
+    board[movements.col_1][movements.row_1].movement = FULLY_MOBILE;
     if (board[movements.col_2][movements.row_2].movement == STATIC) {
         board[movements.col_2][movements.row_2].movement = MOBILE;
     }
